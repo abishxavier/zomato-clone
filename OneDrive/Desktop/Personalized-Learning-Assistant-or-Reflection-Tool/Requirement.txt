@@ -1,0 +1,23 @@
+System Requirements
+
+Minimum
+
+Windows 10 / 11 (64-bit)
+
+Python ≥ 3.9
+
+RAM: 8 GB
+
+Disk: 10 GB free
+
+Internet (only to download models)
+
+Recommended
+
+RAM: 16 GB
+
+SSD storage
+
+Any modern CPU (i5 / Ryzen 5+)
+
+GPU is optional — Ollama runs on CPU.
