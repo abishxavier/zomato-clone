@@ -1,5 +1,7 @@
 import streamlit as st
 from core.llm import chat
+import json
+import warnings
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -28,15 +30,31 @@ Topic = st.text_area(
     height=200
 )
 
-if st.button("Create Simple Notes"):
+difficulty = st.selectbox(
+    "Select Difficulty Level",
+    ["Beginner", "Intermediate", "Advanced"]
+)
+
+days = st.number_input("Number of study days", min_value=1, max_value=30, value=5)
+
+hours = st.number_input("Daily study hours", min_value=1, max_value=12, value=2)
+
+if st.button("Create Study Plan"):
 
     if not Topic.strip():
         st.warning("Please enter a topic.")
     else:
-        with st.spinner("Generating explanation... ⏳"):
+        with st.spinner("Generating study plan... ⏳"):
             try:
-                result = chat(Topic)
-                st.subheader("AI Explanation")
+                result = chat(Topic, difficulty, days, hours)
+
+                parsed = json.loads(result)
+
+                st.subheader("AI Study Plan")
+                st.json(parsed)
+
+            except json.JSONDecodeError:
+                st.error("Model did not return valid JSON. Try again.")
                 st.write(result)
 
             except Exception as e:
