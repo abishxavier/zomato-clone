@@ -1258,6 +1258,31 @@
     </div>
   </div>
 
+  <!-- Order Placed Success Modal -->
+  <div class="modal-overlay" id="order-success-overlay" onclick="closeOrderSuccessModal(event)">
+    <div class="orders-modal" style="max-width: 500px; text-align: center; padding: 32px 24px;" onclick="event.stopPropagation()">
+      <div style="font-size: 52px; margin-bottom: 8px;">🎉</div>
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #ECFDF5; border-radius: 50%; color: #10B981; font-size: 32px; font-weight: 800; margin: 0 auto 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+        ✓
+      </div>
+      <h2 style="font-size: 24px; font-weight: 800; color: #1C1C24; margin-bottom: 6px;">Order Placed Successfully!</h2>
+      <p style="color: #6B7280; font-size: 14px; margin-bottom: 20px;">Your delicious food is being prepared and will be delivered shortly.</p>
+      
+      <div id="order-success-details" style="background: #F9FAFB; border: 1.5px solid #EBF0F5; border-radius: 14px; padding: 18px; text-align: left; margin-bottom: 22px; font-size: 13px;">
+        <!-- Populated dynamically -->
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button type="button" class="btn-secondary-nav" style="flex: 1; justify-content: center; padding: 12px;" onclick="closeOrderSuccessModal(); openOrdersModal();">
+          <span>📜</span> View Orders
+        </button>
+        <button type="button" class="cart-trigger-btn" style="flex: 1; justify-content: center; padding: 12px;" onclick="closeOrderSuccessModal();">
+          Back to Menu 🍽️
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -1637,6 +1662,10 @@
 
         if (response.ok && data.message) {
           showToast('🎉 Order placed successfully! Your food is on its way.', 'success');
+          const savedCart = [...cart];
+          const grandTotalText = document.getElementById('bill-grand-total') ? document.getElementById('bill-grand-total').textContent : '₹0';
+          const orderId = (data.order_ids && data.order_ids.length > 0) ? data.order_ids[0] : Math.floor(1000 + Math.random() * 9000);
+          showOrderSuccessModal(orderId, savedCart, address, grandTotalText);
           cart = [];
           updateCartUI();
           renderDishes();
@@ -1652,6 +1681,45 @@
         if (label) label.textContent = 'Place Order Now';
         updateCartUI();
       }
+    }
+
+    // Show visible order placed confirmation
+    function showOrderSuccessModal(orderId, items, address, totalAmount) {
+      const overlay = document.getElementById('order-success-overlay');
+      const details = document.getElementById('order-success-details');
+      let itemsListHtml = items.map(i => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-weight:600;">
+          <span style="color:#1F2937;">${i.name} × ${i.quantity}</span>
+          <span style="color:#374151;">₹${i.price * i.quantity}</span>
+        </div>
+      `).join('');
+
+      details.innerHTML = `
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E5E7EB; padding-bottom: 10px; margin-bottom: 12px;">
+          <span style="font-weight: 700; color: #4B5563;">Order ID:</span>
+          <span style="font-weight: 800; color: var(--primary); font-size: 15px;">#${orderId}</span>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <div style="color: #9CA3AF; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Dishes Ordered</div>
+          ${itemsListHtml}
+        </div>
+        <div style="display: flex; justify-content: space-between; border-top: 1px dashed #E5E7EB; padding-top: 10px; margin-bottom: 12px; font-weight: 800; font-size: 15px;">
+          <span style="color: #1F2937;">Total Paid:</span>
+          <span style="color: #10B981;">${totalAmount}</span>
+        </div>
+        <div style="background: #FFFFFF; padding: 10px 12px; border-radius: 8px; border: 1px solid #E5E7EB; display: flex; align-items: flex-start; gap: 8px;">
+          <span style="font-size: 18px; line-height: 1;">📍</span>
+          <div style="font-size: 12px; color: #4B5563; line-height: 1.4;">
+            <strong style="color: #1F2937;">Delivering to:</strong><br>${address}
+          </div>
+        </div>
+      `;
+      overlay.classList.add('active');
+    }
+
+    function closeOrderSuccessModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('order-success-overlay').classList.remove('active');
     }
 
     // Orders History Modal

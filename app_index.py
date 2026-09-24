@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import tempfile
 from flask import Flask, request, jsonify, render_template
 
 # Setup template & static folders reliably for both local and Vercel serverless
@@ -155,9 +156,17 @@ def create_connection():
         return conn, 'mysql'
     except Exception:
         # Fall back to SQLite database
-        db_dir = os.path.join(BASE_DIR, 'db')
-        os.makedirs(db_dir, exist_ok=True)
-        sqlite_file = os.path.join(db_dir, 'zomato.db')
+        # In serverless environments (e.g. Vercel / AWS Lambda), the only writable directory is /tmp
+        # Using tempfile.gettempdir() works reliably on both Vercel (/tmp) and Windows (AppData/Local/Temp)
+        if os.environ.get('VERCEL') or not os.access(BASE_DIR, os.W_OK):
+            sqlite_file = os.path.join(tempfile.gettempdir(), 'zomato.db')
+        else:
+            try:
+                db_dir = os.path.join(BASE_DIR, 'db')
+                os.makedirs(db_dir, exist_ok=True)
+                sqlite_file = os.path.join(db_dir, 'zomato.db')
+            except OSError:
+                sqlite_file = os.path.join(tempfile.gettempdir(), 'zomato.db')
         conn = sqlite3.connect(sqlite_file)
         init_sqlite_db(conn)
         return conn, 'sqlite'
